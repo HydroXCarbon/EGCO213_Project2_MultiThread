@@ -43,13 +43,13 @@ public final class Main {
         for (Material material : materialList){
             material.setSupplierSize(suppliersList.size());
             material.setFactorySize(factoryList.size());
-            material.setBarrier(new CyclicBarrier(factoryList.size()+1));
         }
 
         //Set each buffer and barrier for all thread
+        CyclicBarrier factoryBarrier = new CyclicBarrier(factoryList.size());
         for (FactoryThread factory : factoryList){
             factory.setBuffer(materialList);
-            factory.setBarrier(new CyclicBarrier(factoryList.size()+1));
+            factory.setBarrier(factoryBarrier);
         }
         for (SupplierThread supplier : suppliersList){
             supplier.setBuffer(materialList);
@@ -62,11 +62,12 @@ public final class Main {
             System.out.println(e);
         }
 
-        // Summery
-        System.out.println("%-11s >>  Summary");
+        // Summary
+        System.out.printf("\n%-11s >>  ---------------------------------------------------------\n",Thread.currentThread().getName());
+        System.out.printf("%-11s >>  Summary\n",Thread.currentThread().getName());
         Collections.sort(productList);
         for(Product product : productList){
-            System.out.printf("%-11s >>  Total %10s =    %2d",Thread.currentThread().getName(), product.getName(), product.getLotSize());
+            System.out.printf("%-11s >>  Total %-10s =    %2d lots\n",Thread.currentThread().getName(), product.getName(), product.getLotSize());
         }
     }
 
@@ -107,7 +108,7 @@ public final class Main {
                     for (int i = 4; i < col.length; i++) {
                         factoryMaterial.add(Integer.parseInt(col[i].trim()));
                     }
-                    FactoryThread factoryThread = new FactoryThread(factoryName, factoryMaterial, new Product(productName), amountPerDay);
+                    FactoryThread factoryThread = new FactoryThread(factoryName, factoryMaterial, productList.get(productList.size()-1), amountPerDay);
                     factoryList.add(factoryThread);
                 }else{
                     throw new Exception("Invalid data type");
@@ -144,33 +145,40 @@ public final class Main {
         }
 
         // Start all Thread
-        CountDownLatch latch = new CountDownLatch(factoryList.size() + suppliersList.size());
         for(SupplierThread supplier : suppliersList){
-            supplier.setLatch(latch);
             supplier.start();
         }
         for(FactoryThread factory : factoryList){
-            factory.setLatch(latch);
+
             factory.start();
         }
 
         // Start loop day
         for (int i=1 ; i<=days; i++){
 
+            // Create latch for each day
+            CountDownLatch latchS = new CountDownLatch(suppliersList.size());
+            CountDownLatch latchF = new CountDownLatch(factoryList.size());
+
             System.out.printf("\n%-11s >>  ---------------------------------------------------------\n",Thread.currentThread().getName());
             System.out.printf("%-11s >>  Day %d\n",Thread.currentThread().getName(), i);
 
-            // Wake up all thread to do work
+            // Wake up supplier thread to do work
             for (SupplierThread supplier : suppliersList) {
+                supplier.setLatch(latchS);
                 supplier.doWork();
             }
+            // Wait for supplier to finish
+            latchS.await();
+
+            // Wake up factory thread to do work
             for (FactoryThread factory : factoryList) {
+                factory.setLatch(latchF);
                 factory.doWork();
             }
 
-
-            //wait for all thread to finish before next day
-            latch.await();
+            //wait for factory to finish
+            latchF.await();
         }
 
         // Terminate all thread

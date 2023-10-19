@@ -6,17 +6,15 @@ import java.util.concurrent.CountDownLatch;
 abstract class BaseThread extends Thread {
 
     // Variables
-    protected final List<Integer> material;
+    protected List<Integer> material;
     protected List<Material> shareMaterial;
-    protected final Object lock = new Object();
     protected boolean shouldRun = false;
     protected boolean shouldTerminate = false;
     protected CountDownLatch latch;
 
     // Constructor
-    public BaseThread(String name, List<Integer> material){
+    public BaseThread(String name){
         super(name);
-        this.material = material;
     }
 
     // Set latch
@@ -32,28 +30,5 @@ abstract class BaseThread extends Thread {
     // Set buffer
     public void setBuffer(List<Material> shareMaterial){
         this.shareMaterial = shareMaterial;
-    }
-
-    // Wake up thread
-    public void doWork() {
-        synchronized (lock) {
-            shouldRun = true;
-            lock.notify();
-            while (shouldRun) {
-                try {
-                    lock.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    // Terminate thread
-    public void terminate() {
-        synchronized (lock) {
-            shouldTerminate = true;
-            lock.notify();
-        }
     }
 }

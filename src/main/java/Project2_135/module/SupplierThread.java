@@ -4,25 +4,28 @@ import java.util.List;
 
 public class SupplierThread extends BaseThread {
 
+    private static final Object lockS = new Object();
+
     // Constructor
     public SupplierThread(String name,List<Integer> material){
-        super(name, material);
+        super(name);
+        this.material = material;
     }
-
 
     @Override
     public void run() {
         while (true) {
-            synchronized (lock) {
+            synchronized (lockS) {
                 while (!shouldRun) {
                     try {
-                        lock.wait();
+                        lockS.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
 
-                if (shouldTerminate) {  // Check termination condition
+                // Terminate thread
+                if (shouldTerminate) {
                     break;
                 }
 
@@ -33,10 +36,28 @@ public class SupplierThread extends BaseThread {
                 }
 
                 // Notify factory and count down
-                latch.countDown();
                 shouldRun = false;
-                lock.notify();
+                latch.countDown();
+                lockS.notify();
             }
         }
     }
+
+    // Wake up thread
+    public void doWork() {
+        synchronized (lockS) {
+            shouldRun = true;
+            lockS.notify();
+        }
+    }
+
+    // Terminate thread
+    public void terminate() {
+        synchronized (lockS) {
+            shouldRun = true;
+            shouldTerminate = true;
+            lockS.notify();
+        }
+    }
+
 }

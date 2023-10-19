@@ -1,7 +1,9 @@
 package Project2_135.module;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CyclicBarrier;
+import java.util.stream.Collectors;
 
 public class FactoryThread extends BaseThread {
 
@@ -9,12 +11,19 @@ public class FactoryThread extends BaseThread {
     private final Product product;
     private final int amountPerDay;
     private CyclicBarrier barrier;
+    private static final Object lockF = new Object();
+    private List<Integer> holdingMaterial;
 
     // Constructor
     public FactoryThread(String name, List<Integer> material, Product product, int amountPerDay) {
-        super(name, material);
+        super(name);
+        this.material = material.stream().map(n -> n * amountPerDay).collect(Collectors.toList());
         this.product = product;
         this.amountPerDay = amountPerDay;
+        this.holdingMaterial = new ArrayList<>();
+        for (int i = 0; i < material.size(); i++) {
+            this.holdingMaterial.add(0);
+        }
     }
 
     // Set barrier
@@ -35,49 +44,94 @@ public class FactoryThread extends BaseThread {
     @Override
     public void run() {
         while (true) {
-            synchronized (lock) {
+            synchronized (lockF) {
                 while (!shouldRun) {
                     try {
-                        lock.wait();
+                        lockF.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
 
-                if (shouldTerminate) {  // Check termination condition
+                // Terminate thread
+                if (shouldTerminate) {
                     break;
                 }
 
+                // Notify 1 factory
+                lockF.notify();
+            }
                 // Do work here
-                try {
-                    // Wait for all supplier to finish
+            try{
 
+                // Wait for other factory
+                barrier.await();
 
-                    // Show holding material
-                    System.out.printf("%-11s >>  Holding  ", Thread.currentThread().getName());
-                    for (int i = 0; i < material.size(); i++) {
-                        int quantityTemp = material.get(i);
-                        System.out.printf("%4d %-16s", quantityTemp, shareMaterial.get(i).getName());
-                    }
-                    System.out.print("\n");
+                // Show holding material
+                String output = String.format("%-11s >>  Holding  ", Thread.currentThread().getName());
+                for (int i = 0; i < holdingMaterial.size(); i++) {
+                    int quantityTemp = holdingMaterial.get(i);
+                    output += String.format("%4d %-16s", quantityTemp, shareMaterial.get(i).getName());
+                }
+                System.out.println(output);
 
-                    // Wait for all factory to finish
-                    barrier.await();
+                // Wait for other factory
+                barrier.await();
 
-                    // Start producing
-                    for (int i = 0; i < material.size(); i++) {
-                        int quantity = material.get(i);
-                        shareMaterial.get(i).get(quantity, material);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                // Get material
+                for (int i = 0; i < material.size(); i++) {
+                    int quantity = material.get(i);
+                    int materialTemp = shareMaterial.get(i).get(quantity) + holdingMaterial.get(i);
+                    holdingMaterial.set(i,materialTemp);
                 }
 
-                // Notify factory and count down
-                latch.countDown();
-                shouldRun = false;
-                lock.notify();
+                // Check material
+                boolean isEnough = true;
+                for(int i = 0 ; i<holdingMaterial.size();i++){
+                    if(holdingMaterial.get(i) < material.get(i)){
+                        isEnough = false;
+                        break;
+                    }
+                }
+
+                // Wait for other factory
+                barrier.await();
+
+                // Start producing if have enough material
+                if( isEnough == false){
+                    System.out.printf("%-11s >>  %s production fails\n",Thread.currentThread().getName(), product.getName());
+                }else {
+                    List<Integer> tempList = new ArrayList<>();
+                    for (int i = 0; i < material.size(); i++) {
+                        tempList.add(holdingMaterial.get(i) - material.get(i));
+                    }
+                    this.holdingMaterial = tempList;
+                    product.addLotSize(1);
+                    System.out.printf("%-11s >>  %s production succeeds, lot %d\n",Thread.currentThread().getName(), product.getName(), product.getLotSize());
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            shouldRun = false;
+            latch.countDown();
+        }
+    }
+
+    // Wake up thread
+    public void doWork() {
+        synchronized (lockF) {
+            shouldRun = true;
+            lockF.notify();
+        }
+    }
+
+    // Terminate thread
+    public void terminate() {
+        synchronized (lockF) {
+            shouldRun = true;
+            shouldTerminate = true;
+            lockF.notify();
         }
     }
 }

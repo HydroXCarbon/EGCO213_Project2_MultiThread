@@ -41,13 +41,17 @@ public class Material{
     }
 
     // Remove quantity from factory
-    public void get(int quantity, List<Integer> material)throws Exception {
+    synchronized public int get(int quantity) {
 
         // Start producing
-        for(int i = 0 ; i<material.size();i++){
+        if(this.quantity >= quantity) {
             this.quantity -= quantity;
-            System.out.printf("%-11s >>  Get      %4d %-16s balance = %4d %s\n",Thread.currentThread().getName(), quantity, name, this.quantity, name);
+        } else {
+            quantity = this.quantity;
+            this.quantity = 0;
         }
+        System.out.printf("%-11s >>  Get      %4d %-16s balance = %4d %s\n",Thread.currentThread().getName(), quantity, name, this.quantity, name);
+        return quantity;
     }
 
     // Access name
