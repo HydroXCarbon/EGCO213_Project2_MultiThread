@@ -9,10 +9,13 @@ import Project2_135.module.Material;
 import Project2_135.module.Product;
 import Project2_135.module.SupplierThread;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.CyclicBarrier;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 
 
 public final class Main {
@@ -32,11 +35,11 @@ public final class Main {
             try {
                 Scanner scan = new Scanner(new File(configPath));
                 day = readFile(scan, factoryList, suppliersList, materialList, productList);
-                System.out.printf("%-11s >>  read configs from %s\n\n",Thread.currentThread().getName(), configPath);
+                System.out.printf("%-11s >>  read configs from %s\n\n", Thread.currentThread().getName(), configPath);
                 configFound = true;
             } catch (Exception e) {
                 System.out.println(e);
-                System.out.printf("%-11s >> Enter config file for simulation =\n","Thread "+Thread.currentThread().getName());
+                System.out.printf("%-11s >> Enter config file for simulation =\n", "Thread " + Thread.currentThread().getName());
                 Scanner userInput = new Scanner(System.in);
                 String newFileName = userInput.nextLine();
                 configPath = inputPath + newFileName;
@@ -44,39 +47,39 @@ public final class Main {
         }
 
         //Set supplier size and barrier for each material
-        for (Material material : materialList){
+        for (Material material : materialList) {
             material.setSupplierSize(suppliersList.size());
             material.setFactorySize(factoryList.size());
         }
 
         //Set each buffer and barrier for all thread
         CyclicBarrier factoryBarrier = new CyclicBarrier(factoryList.size());
-        for (FactoryThread factory : factoryList){
+        for (FactoryThread factory : factoryList) {
             factory.setBuffer(materialList);
             factory.setBarrier(factoryBarrier);
         }
-        for (SupplierThread supplier : suppliersList){
+        for (SupplierThread supplier : suppliersList) {
             supplier.setBuffer(materialList);
         }
 
         //Start simulation
         try {
-            simulation(day,factoryList,suppliersList, materialList);
-        }catch (Exception e){
+            simulation(day, factoryList, suppliersList, materialList);
+        } catch (Exception e) {
             System.out.println(e);
         }
 
         // Summary
-        System.out.printf("\n%-11s >>  ---------------------------------------------------------\n",Thread.currentThread().getName());
-        System.out.printf("%-11s >>  Summary\n",Thread.currentThread().getName());
+        System.out.printf("\n%-11s >>  ---------------------------------------------------------\n", Thread.currentThread().getName());
+        System.out.printf("%-11s >>  Summary\n", Thread.currentThread().getName());
         Collections.sort(productList);
-        for(Product product : productList){
-            System.out.printf("%-11s >>  Total %-10s =    %2d lots\n",Thread.currentThread().getName(), product.getName(), product.getLotSize());
+        for (Product product : productList) {
+            System.out.printf("%-11s >>  Total %-10s =    %2d lots\n", Thread.currentThread().getName(), product.getName(), product.getLotSize());
         }
     }
 
     //Read file and insert data to each class
-    public static int readFile(Scanner scan,ArrayList<FactoryThread> factoryList,ArrayList<SupplierThread> suppliersList, List<Material> materialList, ArrayList<Product> productList)throws Exception {
+    public static int readFile(Scanner scan, ArrayList<FactoryThread> factoryList, ArrayList<SupplierThread> suppliersList, List<Material> materialList, ArrayList<Product> productList) throws Exception {
 
         int day = 0;
 
@@ -112,12 +115,12 @@ public final class Main {
                     for (int i = 4; i < col.length; i++) {
                         factoryMaterial.add(Integer.parseInt(col[i].trim()));
                     }
-                    FactoryThread factoryThread = new FactoryThread(factoryName, factoryMaterial, productList.get(productList.size()-1), amountPerDay);
+                    FactoryThread factoryThread = new FactoryThread(factoryName, factoryMaterial, productList.get(productList.size() - 1), amountPerDay);
                     factoryList.add(factoryThread);
-                }else{
+                } else {
                     throw new Exception("Invalid data type");
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 System.out.println(e);
             }
         }
@@ -125,47 +128,47 @@ public final class Main {
     }
 
     //Start simulation
-    public static void simulation(int days,ArrayList<FactoryThread> factoryList,ArrayList<SupplierThread> suppliersList, List<Material> materialList)throws Exception{
+    public static void simulation(int days, ArrayList<FactoryThread> factoryList, ArrayList<SupplierThread> suppliersList, List<Material> materialList) throws Exception {
 
         // Initiate simulation
-        System.out.printf("%-11s >>  simulation days = %d\n",Thread.currentThread().getName(), days);
+        System.out.printf("%-11s >>  simulation days = %d\n", Thread.currentThread().getName(), days);
 
         // Display Supplier Thread
-        for(SupplierThread supplier : suppliersList){
-            System.out.printf("%-11s >>  %-11s  daily supply rates =",Thread.currentThread().getName(), supplier.getName());
-            for (int i = 0 ; i < supplier.getMaterial().size(); i++){
-                System.out.printf("%4d %s",supplier.getMaterial().get(i),materialList.get(i).getName());
+        for (SupplierThread supplier : suppliersList) {
+            System.out.printf("%-11s >>  %-11s  daily supply rates =", Thread.currentThread().getName(), supplier.getName());
+            for (int i = 0; i < supplier.getMaterial().size(); i++) {
+                System.out.printf("%4d %s", supplier.getMaterial().get(i), materialList.get(i).getName());
             }
             System.out.println();
         }
 
         // Display Factory Thread
-        for(FactoryThread factory : factoryList){
-            System.out.printf("%-11s >>  %-11s  daily use    rates =",Thread.currentThread().getName(), factory.getName());
-            for (int i = 0 ; i < factory.getMaterial().size(); i++){
-                System.out.printf("%4d %s",factory.getMaterial().get(i),materialList.get(i).getName());
+        for (FactoryThread factory : factoryList) {
+            System.out.printf("%-11s >>  %-11s  daily use    rates =", Thread.currentThread().getName(), factory.getName());
+            for (int i = 0; i < factory.getMaterial().size(); i++) {
+                System.out.printf("%4d %s", factory.getMaterial().get(i), materialList.get(i).getName());
             }
-            System.out.printf("    producing %3d %s\n", factory.getAmountPerDay(),factory.getProduct().getName());
+            System.out.printf("    producing %3d %s\n", factory.getAmountPerDay(), factory.getProduct().getName());
         }
 
         // Start all Thread
-        for(SupplierThread supplier : suppliersList){
+        for (SupplierThread supplier : suppliersList) {
             supplier.start();
         }
-        for(FactoryThread factory : factoryList){
+        for (FactoryThread factory : factoryList) {
 
             factory.start();
         }
 
         // Start loop day
-        for (int i=1 ; i<=days; i++){
+        for (int i = 1; i <= days; i++) {
 
             // Create latch for each day
             CountDownLatch latchS = new CountDownLatch(suppliersList.size());
             CountDownLatch latchF = new CountDownLatch(factoryList.size());
 
-            System.out.printf("\n%-11s >>  ---------------------------------------------------------\n",Thread.currentThread().getName());
-            System.out.printf("%-11s >>  Day %d\n",Thread.currentThread().getName(), i);
+            System.out.printf("\n%-11s >>  ---------------------------------------------------------\n", Thread.currentThread().getName());
+            System.out.printf("%-11s >>  Day %d\n", Thread.currentThread().getName(), i);
 
             // Wake up supplier thread to do work
             for (SupplierThread supplier : suppliersList) {
@@ -186,10 +189,10 @@ public final class Main {
         }
 
         // Terminate all thread
-        for(SupplierThread supplier : suppliersList){
+        for (SupplierThread supplier : suppliersList) {
             supplier.terminate();
         }
-        for(FactoryThread factory : factoryList){
+        for (FactoryThread factory : factoryList) {
             factory.terminate();
         }
     }

@@ -10,7 +10,7 @@ public class SupplierThread extends BaseThread {
     private static final Object lockS = new Object();
 
     // Constructor
-    public SupplierThread(String name,List<Integer> material){
+    public SupplierThread(String name, List<Integer> material) {
         super(name);
         this.material = material;
     }
@@ -33,7 +33,7 @@ public class SupplierThread extends BaseThread {
                 }
 
                 // Do work here
-                for( int i = 0 ; i<material.size();i++){
+                for (int i = 0; i < material.size(); i++) {
                     int quantity = material.get(i);
                     shareMaterial.get(i).put(quantity);
                 }

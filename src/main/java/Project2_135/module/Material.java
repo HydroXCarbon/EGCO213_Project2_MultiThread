@@ -5,7 +5,7 @@ package Project2_135.module;
 
 import java.util.concurrent.CyclicBarrier;
 
-public class Material{
+public class Material {
 
     // Variables
     private final String name;
@@ -19,18 +19,8 @@ public class Material{
         this.name = name;
     }
 
-    // Set factory size
-    public void setFactorySize(int factorySize){
-        this.factorySize = factorySize;
-    }
-
-    // Set supplier size
-    public void setSupplierSize(int supplierSize){
-        this.supplierSize = supplierSize;
-    }
-
     // Set barrier
-    public void setBarrier(CyclicBarrier barrier){
+    public void setBarrier(CyclicBarrier barrier) {
         this.barrier = barrier;
     }
 
@@ -39,20 +29,20 @@ public class Material{
 
         // Start adding
         this.quantity += quantity;
-        System.out.printf("%-11s >>  Put      %4d %-16s balance = %4d %s\n",Thread.currentThread().getName(), quantity, name, this.quantity, name);
+        System.out.printf("%-11s >>  Put      %4d %-16s balance = %4d %s\n", Thread.currentThread().getName(), quantity, name, this.quantity, name);
     }
 
     // Remove quantity from factory
     synchronized public int get(int quantity) {
 
         // Start producing
-        if(this.quantity >= quantity) {
+        if (this.quantity >= quantity) {
             this.quantity -= quantity;
         } else {
             quantity = this.quantity;
             this.quantity = 0;
         }
-        System.out.printf("%-11s >>  Get      %4d %-16s balance = %4d %s\n",Thread.currentThread().getName(), quantity, name, this.quantity, name);
+        System.out.printf("%-11s >>  Get      %4d %-16s balance = %4d %s\n", Thread.currentThread().getName(), quantity, name, this.quantity, name);
         return quantity;
     }
 
@@ -67,12 +57,22 @@ public class Material{
     }
 
     // Access factory size
-    public int getFactorySize(){
+    public int getFactorySize() {
         return factorySize;
     }
 
+    // Set factory size
+    public void setFactorySize(int factorySize) {
+        this.factorySize = factorySize;
+    }
+
     // Access supplier size
-    public int getSupplierSize(){
+    public int getSupplierSize() {
         return supplierSize;
+    }
+
+    // Set supplier size
+    public void setSupplierSize(int supplierSize) {
+        this.supplierSize = supplierSize;
     }
 }

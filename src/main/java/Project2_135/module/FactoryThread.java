@@ -10,11 +10,11 @@ import java.util.stream.Collectors;
 
 public class FactoryThread extends BaseThread {
 
+    private static final Object lockF = new Object();
     // Variables
     private final Product product;
     private final int amountPerDay;
     private CyclicBarrier barrier;
-    private static final Object lockF = new Object();
     private List<Integer> holdingMaterial;
 
     // Constructor
@@ -30,7 +30,7 @@ public class FactoryThread extends BaseThread {
     }
 
     // Set barrier
-    public void setBarrier(CyclicBarrier barrier){
+    public void setBarrier(CyclicBarrier barrier) {
         this.barrier = barrier;
     }
 
@@ -64,8 +64,8 @@ public class FactoryThread extends BaseThread {
                 // Notify 1 factory
                 lockF.notify();
             }
-                // Do work here
-            try{
+            // Do work here
+            try {
 
                 // Wait for other factory
                 barrier.await();
@@ -86,14 +86,14 @@ public class FactoryThread extends BaseThread {
                     int quantity = material.get(i) - holdingMaterial.get(i);
                     if (quantity > 0) {
                         int materialTemp = shareMaterial.get(i).get(quantity) + holdingMaterial.get(i);
-                        holdingMaterial.set(i,materialTemp);
+                        holdingMaterial.set(i, materialTemp);
                     }
                 }
 
                 // Check material
                 boolean isEnough = true;
-                for(int i = 0 ; i<holdingMaterial.size();i++){
-                    if(holdingMaterial.get(i) < material.get(i)){
+                for (int i = 0; i < holdingMaterial.size(); i++) {
+                    if (holdingMaterial.get(i) < material.get(i)) {
                         isEnough = false;
                         break;
                     }
@@ -102,26 +102,26 @@ public class FactoryThread extends BaseThread {
                 barrier.await();
 
                 // Start producing if have enough material
-                if(!isEnough){
-                    System.out.printf("%-11s >>  %s production fails\n",Thread.currentThread().getName(), product.getName());
+                if (!isEnough) {
+                    System.out.printf("%-11s >>  %s production fails\n", Thread.currentThread().getName(), product.getName());
 
                     // Return material
                     for (int i = 0; i < holdingMaterial.size(); i++) {
-                        if(holdingMaterial.get(i) < material.get(i) && holdingMaterial.get(i) > 0){
+                        if (holdingMaterial.get(i) < material.get(i) && holdingMaterial.get(i) > 0) {
                             int quantityToReturn = holdingMaterial.get(i);
-                            holdingMaterial.set(i,0);
+                            holdingMaterial.set(i, 0);
                             shareMaterial.get(i).put(quantityToReturn);
                         }
                     }
 
-                }else {
+                } else {
                     List<Integer> tempList = new ArrayList<>();
                     for (int i = 0; i < material.size(); i++) {
                         tempList.add(holdingMaterial.get(i) - material.get(i));
                     }
                     this.holdingMaterial = tempList;
                     product.addLotSize(1);
-                    System.out.printf("%-11s >>  %s production succeeds, lot %d\n",Thread.currentThread().getName(), product.getName(), product.getLotSize());
+                    System.out.printf("%-11s >>  %s production succeeds, lot %d\n", Thread.currentThread().getName(), product.getName(), product.getLotSize());
                 }
 
             } catch (Exception e) {

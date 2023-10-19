@@ -16,7 +16,7 @@ abstract class BaseThread extends Thread {
     protected CountDownLatch latch;
 
     // Constructor
-    public BaseThread(String name){
+    public BaseThread(String name) {
         super(name);
     }
 
@@ -26,12 +26,12 @@ abstract class BaseThread extends Thread {
     }
 
     // Access material
-    public List<Integer> getMaterial(){
+    public List<Integer> getMaterial() {
         return material;
     }
 
     // Set buffer
-    public void setBuffer(List<Material> shareMaterial){
+    public void setBuffer(List<Material> shareMaterial) {
         this.shareMaterial = shareMaterial;
     }
 }
