@@ -1,3 +1,6 @@
+//6513135 Purin Pongpanich
+//6513161 Jarupat Chodsitanan
+//6513163 Chalisa Buathong
 package Project2_135.module;
 
 import java.util.ArrayList;
@@ -80,9 +83,11 @@ public class FactoryThread extends BaseThread {
 
                 // Get material
                 for (int i = 0; i < material.size(); i++) {
-                    int quantity = material.get(i);
-                    int materialTemp = shareMaterial.get(i).get(quantity) + holdingMaterial.get(i);
-                    holdingMaterial.set(i,materialTemp);
+                    int quantity = material.get(i) - holdingMaterial.get(i);
+                    if (quantity > 0) {
+                        int materialTemp = shareMaterial.get(i).get(quantity) + holdingMaterial.get(i);
+                        holdingMaterial.set(i,materialTemp);
+                    }
                 }
 
                 // Check material
@@ -93,13 +98,22 @@ public class FactoryThread extends BaseThread {
                         break;
                     }
                 }
-
                 // Wait for other factory
                 barrier.await();
 
                 // Start producing if have enough material
-                if( isEnough == false){
+                if(!isEnough){
                     System.out.printf("%-11s >>  %s production fails\n",Thread.currentThread().getName(), product.getName());
+
+                    // Return material
+                    for (int i = 0; i < holdingMaterial.size(); i++) {
+                        if(holdingMaterial.get(i) < material.get(i) && holdingMaterial.get(i) > 0){
+                            int quantityToReturn = holdingMaterial.get(i);
+                            holdingMaterial.set(i,0);
+                            shareMaterial.get(i).put(quantityToReturn);
+                        }
+                    }
+
                 }else {
                     List<Integer> tempList = new ArrayList<>();
                     for (int i = 0; i < material.size(); i++) {

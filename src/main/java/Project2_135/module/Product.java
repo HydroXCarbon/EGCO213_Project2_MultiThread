@@ -1,3 +1,6 @@
+//6513135 Purin Pongpanich
+//6513161 Jarupat Chodsitanan
+//6513163 Chalisa Buathong
 package Project2_135.module;
 
 public class Product implements Comparable<Product> {

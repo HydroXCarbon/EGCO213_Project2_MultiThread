@@ -1,3 +1,7 @@
+//6513135 Purin Pongpanich
+//6513161 Jarupat Chodsitanan
+//6513163 Chalisa Buathong
+
 package Project2_135;
 
 import Project2_135.module.FactoryThread;
@@ -15,7 +19,7 @@ public final class Main {
 
     public static void main(String[] args) {
         String inputPath = "src/main/java/Project2_135/";
-        String configPath = inputPath + "test.txt";
+        String configPath = inputPath + "config.txt";
         ArrayList<FactoryThread> factoryList = new ArrayList<>();
         ArrayList<SupplierThread> suppliersList = new ArrayList<>();
         List<Material> materialList = new ArrayList<>();
